@@ -28,7 +28,7 @@ so I am certain that there are so many flaws on my analysis and methods. Need in
 19. own_telephone: Telephone (yes,no)  
 20. foreign_worker: Foreign worker (yes,no)
 
-## Usage in localhost
+## How to Deploy in localhost
 For running the image locally, make sure you edit the entrypoint to this one:
 ```Dockerfile
 ENTRYPOINT ["gunicorn", "--bind=0.0.0.0:<port>", "score:app"]
@@ -68,4 +68,121 @@ A browser window will pop up to the login page. Login using your account and con
 
 Login to Heroku container:
 ```cmd
+heroku container:login
+```
 
+And then create the app from the built image, in this case I set the name as zoomcamp-midterm:
+```cmd
+heroku create zoomcamp-midterm 
+```
+
+Build the image using this command. It also push your built image to Heroku container registry:
+```cmd
+heroku container:push web -a zoomcamp-midterm
+```
+
+Finally, release it to expose it to public using this command:
+```cmd
+heroku container:release web -a zoomcamp-midterm
+```
+and the app is ready to be hit.
+In this case, the app url is https://zoomcamp-midterm.herokuapp.com/predict
+
+
+## Usage
+
+You need these all parameters as an input to the model
+```python
+{'checking_status': "'<0'",
+ 'duration': 36,
+ 'credit_history': "'critical/other existing credit'",
+ 'purpose': 'education',
+ 'credit_amount': 8065,
+ 'savings_status': "'<100'",
+ 'employment': "'1<=X<4'",
+ 'installment_commitment': 3,
+ 'personal_status': "'female div/dep/mar'",
+ 'other_parties': 'none',
+ 'residence_since': 2,
+ 'property_magnitude': "'no known property'",
+ 'age': 25,
+ 'other_payment_plans': 'none',
+ 'housing': 'own',
+ 'existing_credits': 2,
+ 'job': "'high qualif/self emp/mgmt'",
+ 'num_dependents': 1,
+ 'own_telephone': 'yes',
+ 'foreign_worker': 'yes'}
+  ```
+
+And it gives the output as below:
+```python
+{'bad': True, 'bad_probability': 0.9411764705882353}
+```
+
+You can also run test.py in this repo to automatically hit the app.
+
+And below is the list of possible inputs for each parameter:
+```python
+['age',
+ "checking_status='0<=X<200'",
+ "checking_status='<0'",
+ "checking_status='>=200'",
+ "checking_status='no checking'",
+ 'credit_amount',
+ "credit_history='all paid'",
+ "credit_history='critical/other existing credit'",
+ "credit_history='delayed previously'",
+ "credit_history='existing paid'",
+ "credit_history='no credits/all paid'",
+ 'duration',
+ "employment='1<=X<4'",
+ "employment='4<=X<7'",
+ "employment='<1'",
+ "employment='>=7'",
+ 'employment=unemployed',
+ 'existing_credits',
+ 'foreign_worker=no',
+ 'foreign_worker=yes',
+ "housing='for free'",
+ 'housing=own',
+ 'housing=rent',
+ 'installment_commitment',
+ "job='high qualif/self emp/mgmt'",
+ "job='unemp/unskilled non res'",
+ "job='unskilled resident'",
+ 'job=skilled',
+ 'num_dependents',
+ "other_parties='co applicant'",
+ 'other_parties=guarantor',
+ 'other_parties=none',
+ 'other_payment_plans=bank',
+ 'other_payment_plans=none',
+ 'other_payment_plans=stores',
+ 'own_telephone=none',
+ 'own_telephone=yes',
+ "personal_status='female div/dep/mar'",
+ "personal_status='male div/sep'",
+ "personal_status='male mar/wid'",
+ "personal_status='male single'",
+ "property_magnitude='life insurance'",
+ "property_magnitude='no known property'",
+ "property_magnitude='real estate'",
+ 'property_magnitude=car',
+ "purpose='domestic appliance'",
+ "purpose='new car'",
+ "purpose='used car'",
+ 'purpose=business',
+ 'purpose=education',
+ 'purpose=furniture/equipment',
+ 'purpose=other',
+ 'purpose=radio/tv',
+ 'purpose=repairs',
+ 'purpose=retraining',
+ 'residence_since',
+ "savings_status='100<=X<500'",
+ "savings_status='500<=X<1000'",
+ "savings_status='<100'",
+ "savings_status='>=1000'",
+ "savings_status='no known savings'"]
+ ```
