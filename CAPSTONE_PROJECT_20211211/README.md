@@ -5,29 +5,48 @@ using decision trees and XGBoost. After tuned the parameters for both methods, X
 Therefore I decided to use it as the main model for this project.
 For the last couple of days, I didn't have time to explore and learn even more about machine learning and its concepts, 
 so I am so certain that there are so many flaws on my analysis and methods. Please give me some feedbacks regarding this project and hopefully 
-I could improve my knowledge and make a better model next time. Thank you very much for all of you who check .
+I could improve my knowledge and make a better model next time. Thank you very much for all of you who evaluate my project.
 
 ### Attribute description   
-1. checking_status: Status of existing checking account, in Deutsche Mark.  
-2. duration: Duration in months  
-3. credit_history: Credit history (credits taken, paid back duly, delays, critical accounts)  
-4. purpose: Purpose of the credit (car, television,...)  
-5. credit_amount: Credit amount  
-6. savings_status: Status of savings account/bonds, in Deutsche Mark.  
-7. employment: Present employment, in number of years.  
-8. installment_commitment: Installment rate in percentage of disposable income  
-9. personal_status: Personal status (married, single,...) and sex  
-10. other_parties: Other debtors / guarantors  
-11. residence_since: Present residence since X years  
-12. property_magnitude: Property (e.g. real estate)  
-13. age: Age in years  
-14. other_payment_plans: Other installment plans (banks, stores)  
-15. housing: Housing (rent, own,...)  
-16. existing_credits: Number of existing credits at this bank  
-17. job: Job  
-18. num_dependents: Number of people being liable to provide maintenance for  
-19. own_telephone: Telephone (yes,no)  
-20. foreign_worker: Foreign worker (yes,no)
+1. recency - months since last donation 
+2. frequency - total number of donation 
+3. total_donated - total blood donated in c.c. 
+4. months_since_beginning - months since first donation
+5. class: a binary variable representing whether he/she donated blood in March 2007 (1 stand for donating blood; 0 stands for not donating blood).
+
+## How to Install Dependencies Using pipenv
+Make sure you have pipenv installed on your local machine. If not, you can install it first using this command:
+```cmd
+pip install pipenv
+```
+After that, install the dependencies required for this model to work using this command:
+```cmd
+pipenv install numpy pandas scikit-learn==0.24.1 flask xgboost==1.5.0 gunicorn
+```
+It automatically created Pipfile and Pipfile.lock. Wait until it finish installing the dependencies.
+
+Next, run the virtual environment using ```pipenv shell ``` and type this command to run the app using gunicorn:
+```cmd
+gunicorn --bind 0.0.0.0:9698 pred:app
+```
+Now you can hit the app using this command:
+```python
+donator = {"recency": 1,
+  "frequency": 16,
+  "total_donated": 4000,
+  "months_since_beginning": 35}
+ 
+import requests
+url = 'http://localhost:9698/predict'
+response = requests.post(url, json=donator)
+result = response.json()
+result
+```
+If success, the app will return this response:
+```cmd
+{'donating_probability': 0.8267529010772705, 'is_donating': True}
+```
+
 
 ## How to Deploy in localhost
 For running the image locally, make sure you edit the entrypoint to this one:
@@ -42,7 +61,7 @@ docker build -t <image_name>:<version> .
 
 Then run the docker using this command:
 ```cmd
-docker run -it --rm -p <host_port>:<container_port> zoomcamp-midterm:latest
+docker run -it --rm -p <host_port>:<container_port> zoomcamp-capstone:latest
 ```
 
 ## How to Deploy to Heroku
@@ -72,118 +91,36 @@ Login to Heroku container:
 heroku container:login
 ```
 
-And then create the app from the built image, in this case I set the name as zoomcamp-midterm:
+And then create the app from the built image, in this case I set the name as zoomcamp-capstone-tg. Make sure no one on the heroku server has taken the name before. Otherwise it will gives the error that the name has been taken:
 ```cmd
-heroku create zoomcamp-midterm 
+heroku create zoomcamp-capstone-tg 
 ```
 
 Build the image using this command. It also push your built image to Heroku container registry:
 ```cmd
-heroku container:push web -a zoomcamp-midterm
+heroku container:push web -a zoomcamp-capstone-tg
 ```
 
 Finally, release it to expose it to public using this command:
 ```cmd
-heroku container:release web -a zoomcamp-midterm
+heroku container:release web -a zoomcamp-capstone-tg
 ```
 and the app is ready to be hit.
-In this case, the app url is https://zoomcamp-midterm.herokuapp.com/predict
+In this case, the app url is https://zoomcamp-capstone-tg.herokuapp.com/predict
 
 
 ## Usage
 
-You need these all parameters as an input to the model
+You need these all parameters as an input to the model. You can change the value, but make sure the data type is number:
 ```python
-{'checking_status': "'<0'",
- 'duration': 36,
- 'credit_history': "'critical/other existing credit'",
- 'purpose': 'education',
- 'credit_amount': 8065,
- 'savings_status': "'<100'",
- 'employment': "'1<=X<4'",
- 'installment_commitment': 3,
- 'personal_status': "'female div/dep/mar'",
- 'other_parties': 'none',
- 'residence_since': 2,
- 'property_magnitude': "'no known property'",
- 'age': 25,
- 'other_payment_plans': 'none',
- 'housing': 'own',
- 'existing_credits': 2,
- 'job': "'high qualif/self emp/mgmt'",
- 'num_dependents': 1,
- 'own_telephone': 'yes',
- 'foreign_worker': 'yes'}
+{"recency": 1,
+  "frequency": 16,
+  "total_donated": 4000,
+  "months_since_beginning": 35
+}
   ```
 
 And it gives the output as below:
 ```python
-{'bad': True, 'bad_probability': 0.9411764705882353}
+{'donating_probability': 0.8267529010772705, 'is_donating': True}
 ```
-
-You can also run test.py in this repo to automatically hit the app.
-
-And below is the list of possible inputs for each parameter:
-```python
-['age',
- "checking_status='0<=X<200'",
- "checking_status='<0'",
- "checking_status='>=200'",
- "checking_status='no checking'",
- 'credit_amount',
- "credit_history='all paid'",
- "credit_history='critical/other existing credit'",
- "credit_history='delayed previously'",
- "credit_history='existing paid'",
- "credit_history='no credits/all paid'",
- 'duration',
- "employment='1<=X<4'",
- "employment='4<=X<7'",
- "employment='<1'",
- "employment='>=7'",
- 'employment=unemployed',
- 'existing_credits',
- 'foreign_worker=no',
- 'foreign_worker=yes',
- "housing='for free'",
- 'housing=own',
- 'housing=rent',
- 'installment_commitment',
- "job='high qualif/self emp/mgmt'",
- "job='unemp/unskilled non res'",
- "job='unskilled resident'",
- 'job=skilled',
- 'num_dependents',
- "other_parties='co applicant'",
- 'other_parties=guarantor',
- 'other_parties=none',
- 'other_payment_plans=bank',
- 'other_payment_plans=none',
- 'other_payment_plans=stores',
- 'own_telephone=none',
- 'own_telephone=yes',
- "personal_status='female div/dep/mar'",
- "personal_status='male div/sep'",
- "personal_status='male mar/wid'",
- "personal_status='male single'",
- "property_magnitude='life insurance'",
- "property_magnitude='no known property'",
- "property_magnitude='real estate'",
- 'property_magnitude=car',
- "purpose='domestic appliance'",
- "purpose='new car'",
- "purpose='used car'",
- 'purpose=business',
- 'purpose=education',
- 'purpose=furniture/equipment',
- 'purpose=other',
- 'purpose=radio/tv',
- 'purpose=repairs',
- 'purpose=retraining',
- 'residence_since',
- "savings_status='100<=X<500'",
- "savings_status='500<=X<1000'",
- "savings_status='<100'",
- "savings_status='>=1000'",
- "savings_status='no known savings'"]
- ```
